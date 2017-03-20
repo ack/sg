@@ -1,0 +1,51 @@
+---
+name: Server General Encryption Agent for MySQL
+shortDescription: Server General Encryption Agent for MySQL
+public: true
+author: ecosystem@ctl.io
+organization: Server General
+defaultPlaybook: playbook.yml
+imagePath: https://raw.github.com/clc-runner/Assets/master/servergeneral.png
+description: 'Server General Encryption Agent for MySQL'
+fields:
+- displayName: Datacenter
+  name: dc
+  required: true
+  type: datacenters
+- displayName: Server
+  name: server_id
+  parent: dc
+  required: true
+  type: servers
+- displayName: EULA
+  name: eula
+  helpText: https://www.servergeneral.com/eula/
+  type: select
+  options:
+  - value: ''
+    displayName: No
+  - value: Accept
+    displayName: Yes
+
+- displayName: Contact Name
+  name: name
+  required: true
+  type: text
+- displayName: Contact Email
+  name: email
+  required: true
+  type: text
+- displayName: Company Title
+  name: title
+  required: true
+  type: text
+
+- displayName: Password (for sgadmin)
+  name: sga_password
+  required: true
+  type: password
+
+
+tags:
+- infrastructure
+- encryption

@@ -1,0 +1,18 @@
+--- 
+- name: redhat sg binaries
+  copy: src="{{ role_path }}/files/sga-install-redhat-centos" dest=/tmp/sga-install mode=0711
+  when: ansible_os_family == 'RedHat'
+
+- name: debian sg binaries
+  copy: src="{{ role_path }}/files/sga-install-ubuntu-debian" dest=/tmp/sga-install mode=0711
+  when: ansible_os_family == 'Debian'
+
+- raw: echo '{{sga_password}}' | /tmp/sga-install -p
+
+- name: add license to agent
+  become: yes
+  become_method: su
+  become_user: sgadmin
+  raw: sudo srvg license-add -l '{{ key }}'
+
+

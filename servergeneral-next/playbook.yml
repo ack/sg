@@ -1,0 +1,39 @@
+---
+- name: resolve server
+  hosts: localhost
+  roles:
+  - server
+
+- name: ensure python
+  hosts: servers
+  gather_facts: false
+  tasks:
+  - raw: which python || (apt-get update && apt-get install -qy python) || (yum update -y && yum install -y python)
+
+- name: upgrade system
+  hosts: servers
+  gather_facts: true
+  tasks:
+  - raw: yum update -y -q && yum upgrade -y -q
+    when: ansible_os_family == 'RedHat'
+  - raw: apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get upgrade -qqy -o Dpkg::Options::="--force-confdef"
+    when: ansible_os_family == 'Debian'
+
+# separated since the API servers currently restrict by IP
+- name: provision license
+  hosts: localhost
+  vars: 
+    sg_api_base: foobar
+    sg_api_key: foobar
+    sg_partner_id: foobar
+  tasks: 
+  - include: roles/sg/tasks/licensing.yml
+
+- name: install sg binaries
+  hosts: servers
+  gather_facts: true
+  vars:
+    product: SGE-MYSQL
+  roles:
+  - { role: sg , product: SGE-MYSQL , key: '{{ hostvars["localhost"].license_key }}' }
+

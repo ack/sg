@@ -1,0 +1,81 @@
+---
+- name: get token
+  #no_log: true
+  uri:
+    url: '{{sg_api_base}}/v1/auth'
+    method: POST
+    body:
+      type: CHALLENGE
+      partner_id: '{{sg_partner_id}}'
+    body_format: json
+    return_content: yes
+    validate_certs: no
+  register: challenge
+- fail:
+    msg: 'ERROR fetching auth token {{challenge.json.message}}'
+  when: challenge.json.result == 'FAIL'
+- set_fact:
+    token: 'auth_tok_{{ (sg_api_key + ":" + challenge.json.challenge) | hash("md5") }}'
+
+- name: register customer
+  #no_log: true
+  uri:
+    url: '{{sg_api_base}}/v1/customers'
+    method: POST
+    body:
+      type: REGISTER
+      auth_token: '{{token}}'
+      name: '{{name}}'
+      email: '{{email}}'
+      title: '{{title}}'
+    body_format: json
+    return_content: yes
+    validate_certs: no
+  register: cuid
+- fail: 
+    msg: 'ERROR registering customer {{cuid.json.message}}'
+  when: cuid.json.result == 'FAIL'
+- set_fact: 
+    cuid: '{{cuid.json.cuid}}'
+
+
+- name: request license
+  #no_log: true
+  uri:
+    url: '{{sg_api_base}}/v1/licenses'
+    method: POST
+    body:
+      type: REQUEST_LICENSE
+      auth_token: '{{token}}'
+      cuid: '{{cuid}}'
+      license_type: '{{product}}'
+    body_format: json
+    return_content: yes
+    validate_certs: no
+  register: request
+- fail: 
+    msg: 'ERROR requesting license {{request.json.message}}'
+  when: request.json.result == 'FAIL'
+
+
+- name: provision license
+  #no_log: true
+  uri:
+    url: '{{sg_api_base}}/v1/licenses'
+    method: POST
+    body:
+      type: CHECK_LICENSE_STATUS
+      auth_token: '{{token}}'
+      trans_token: '{{request.json.trans_token}}'
+    body_format: json
+    return_content: yes
+    validate_certs: no
+  register: license
+  until: "license.json.license_key"
+  retries: 15
+  delay: 30
+- fail: 
+    msg: 'ERROR provisioning license {{license.json}}'
+  when: license.json.subscription.status.lower() != 'active'
+- set_fact: 
+    license_key: '{{license.json.license_key}}'

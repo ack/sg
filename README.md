@@ -13,6 +13,10 @@ provide a yml file (named sgvars.yml) with the following keys filled in:
     sg_api_base: https://hostname
     sg_api_key: devel-api-key
     sg_partner_id: devel-partner-id
+    name: Albert Choi
+    email: albert.choi@ctl.io
+    title: Engineer
+    product: SGE-MYSQL
 
 
 # invoke
